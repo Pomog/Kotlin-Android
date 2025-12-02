@@ -1,6 +1,7 @@
 package com.prot.mytestapplication
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -84,6 +86,18 @@ fun ScreenContent(modifier: Modifier = Modifier) {
                     CreateImage()
                     HorizontalDivider(thickness = 5.dp, color = Color.White)
                     CreatePersonalInfoCard(Modifier.padding(5.dp))
+                    Button(
+                        onClick = {
+                            Log.d("Clicked", "ScreenContent: Clicked")
+                        }
+                    ) {
+                        Text(
+                            text = "Click",
+                            modifier = Modifier.padding(3.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.inversePrimary
+                        )
+                    }
                 }
             }
 
@@ -100,8 +114,8 @@ fun CreatePersonalInfoCard(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Johvi",
-            style = MaterialTheme.typography.headlineMedium,
+            text = "Kotlin",
+            style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.primary
         )
         Text(
@@ -110,19 +124,45 @@ fun CreatePersonalInfoCard(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.displayMedium,
             color = MaterialTheme.colorScheme.primary
         )
-        Text(
-            text = "The Comprehensive Bootcamp",
-            modifier = Modifier.padding(3.dp),
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.primary
-        )
+
+        ShowContent()
     }
+}
+
+//@Preview
+@Composable
+fun ShowContent() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(5.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Surface(
+            modifier = Modifier
+                .padding(3.dp)
+                .fillMaxSize(),
+            shape = RoundedCornerShape(corner = CornerSize(12.dp)),
+            border = BorderStroke(width = 2.dp, color = Color.Cyan),
+            color = Color.Transparent
+        ) {
+
+            Portfolio(data = listOf("Project 1", "Project 2", "Project 3"))
+
+        }
+    }
+}
+
+@Composable
+fun Portfolio(data: List<String>) {
+    TODO("Not yet implemented")
 }
 
 @Preview(
     showBackground = true,
     showSystemUi = true
 )
+
 @Composable
 fun GreetingPreview() {
     MyTestApplicationTheme {
