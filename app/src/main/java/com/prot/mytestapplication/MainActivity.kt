@@ -1,7 +1,6 @@
 package com.prot.mytestapplication
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +28,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,6 +62,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ScreenContent(modifier: Modifier = Modifier) {
+    val buttonState = remember { mutableStateOf(false) }
+    val buttonText = if (buttonState.value) "Hide" else "Show"
+
     Surface(
         modifier = modifier
     ) {
@@ -88,15 +94,19 @@ fun ScreenContent(modifier: Modifier = Modifier) {
                     CreatePersonalInfoCard(Modifier.padding(5.dp))
                     Button(
                         onClick = {
-                            Log.d("Clicked", "ScreenContent: Clicked")
+                            buttonState.value = !buttonState.value
                         }
                     ) {
                         Text(
-                            text = "Click",
+                            text = buttonText,
                             modifier = Modifier.padding(3.dp),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.inversePrimary
                         )
+                    }
+
+                    if (buttonState.value) {
+                        ShowContent()
                     }
                 }
             }
@@ -125,7 +135,7 @@ fun CreatePersonalInfoCard(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.primary
         )
 
-        ShowContent()
+
     }
 }
 
@@ -155,7 +165,12 @@ fun ShowContent() {
 
 @Composable
 fun Portfolio(data: List<String>) {
-    TODO("Not yet implemented")
+    LazyColumn {
+        items(items = data) { item ->
+            Text(text = item)
+        }
+    }
+
 }
 
 @Preview(
