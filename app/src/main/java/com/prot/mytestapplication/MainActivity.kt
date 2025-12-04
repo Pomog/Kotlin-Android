@@ -6,9 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,8 +35,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.prot.mytestapplication.ui.theme.MyTestApplicationTheme
@@ -105,8 +110,12 @@ fun ScreenContent(modifier: Modifier = Modifier) {
                         )
                     }
 
-                    if (buttonState.value) {
-                        ShowContent()
+                    val data = listOf("Project 1", "Project 2", "Project 3", "Project 4")
+
+                    if (!buttonState.value) {
+                        ShowContent(data)
+                    } else {
+                        ShowContent(listOf())
                     }
                 }
             }
@@ -141,7 +150,7 @@ fun CreatePersonalInfoCard(modifier: Modifier = Modifier) {
 
 //@Preview
 @Composable
-fun ShowContent() {
+fun ShowContent(data: List<String>) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -156,9 +165,7 @@ fun ShowContent() {
             border = BorderStroke(width = 2.dp, color = Color.Cyan),
             color = Color.Transparent
         ) {
-
-            Portfolio(data = listOf("Project 1", "Project 2", "Project 3"))
-
+            Portfolio(data)
         }
     }
 }
@@ -167,10 +174,44 @@ fun ShowContent() {
 fun Portfolio(data: List<String>) {
     LazyColumn {
         items(items = data) { item ->
-            Text(text = item)
+            Card(
+                modifier = Modifier
+                    .padding(15.dp)
+                    .fillMaxWidth(),
+                shape = RectangleShape,
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 4.dp
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(16.dp)
+                )
+                {
+                    CreateImTwo(modifier = Modifier.size(75.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .padding(5.dp)
+                            .align(alignment = Alignment.CenterVertically)
+                    ) {
+                        Text(
+                            text = item,
+                            textAlign = TextAlign.Right,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = "Hyper‑V vs VirtualBox",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
         }
     }
-
 }
 
 @Preview(
@@ -216,10 +257,40 @@ fun CreateImage(modifier: Modifier = Modifier) {
                 painter = painterResource(
                     id = R.drawable.johvi
                 ),
+                alignment = Alignment.Center,
                 contentDescription = "Profile Image",
-                modifier = Modifier.size(138.dp),
+                modifier = modifier.size(150.dp),
                 contentScale = ContentScale.Crop
             )
         }
     }
+}
+
+@Composable
+fun CreateImTwo(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier
+            .size(150.dp)
+            .padding(5.dp),
+        shape = CircleShape,
+        border = BorderStroke(
+            width = 0.5.dp,
+            color = Color.LightGray,
+        ),
+        tonalElevation = 10.dp,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    )
+    {
+        Image(
+            painter = painterResource(
+                id = R.drawable.johvi
+            ),
+            alignment = Alignment.Center,
+            contentDescription = "Profile Image",
+            modifier = modifier.size(150.dp),
+            contentScale = ContentScale.Crop
+        )
+
+    }
+
 }
