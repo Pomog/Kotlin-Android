@@ -1,5 +1,8 @@
 package com.prot.test
 
 fun main() {
-    println("Hello, world!");
+    var name: String = "Yurii" // mutable
+    name += " OP"
+
+    println("Hello, world! $name")
 }
