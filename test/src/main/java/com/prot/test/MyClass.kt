@@ -3,7 +3,7 @@ package com.prot.test
 import java.net.HttpURLConnection
 import java.net.URI
 
-fun main() {
+fun main(): Unit = runBlocking {
     var name: String = "Yurii" // mutable
     name += " OP"
 
@@ -14,15 +14,20 @@ fun main() {
 
     println("Hello, world! \n $b1 \n$b2 \n$b3")
 
-    simpleGet()
+    val body = simpleGet()
+    println(body)
 }
 
-fun simpleGet() {
+suspend fun simpleGet() {
     val url = URI("https://github.com/Pomog").toURL()
-    val conn = (url.openConnection() as HttpURLConnection)
+    val conn: HttpURLConnection = (url.openConnection() as HttpURLConnection)
     conn.requestMethod = "GET"
+    conn.connectTimeout = 5000
 
-    conn.getInputStream()
-        .use { it.reader().readText() }
-        .also { println(it) }
+    try {
+        conn.getInputStream().use { it.reader().readText() }.also { println(it) }
+    } finally {
+        conn.disconnect()
+    }
+
 }
