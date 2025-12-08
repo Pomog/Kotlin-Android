@@ -1,5 +1,6 @@
 package com.prot.test
 
+import kotlinx.coroutines.runBlocking
 import java.net.HttpURLConnection
 import java.net.URI
 
@@ -16,6 +17,23 @@ fun main(): Unit = runBlocking {
 
     val body = simpleGet()
     println(body)
+
+    val add: (Int, Int) -> Int = { a, b -> a + b }
+
+    message(message = "Hello") {
+        add(1, 2)
+    }
+
+    val myList = listOf("Yurii", "Anna", "Nelya")
+    val mutableList = mutableListOf("Yurii", "Anna", "Nelya")
+    mutableList.add(0, "Cat")
+
+    for (item in myList) {
+        println(item)
+    }
+
+    mutableList.forEach { println(it) }
+    println(myList.size)
 }
 
 suspend fun simpleGet() {
@@ -29,5 +47,9 @@ suspend fun simpleGet() {
     } finally {
         conn.disconnect()
     }
-
 }
+
+fun message(message: String, funAsParameter: () -> Int) {
+    println("$message ${funAsParameter()}")
+}
+
