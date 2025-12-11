@@ -55,9 +55,12 @@ fun main(): Unit = runBlocking {
     }
     mutableList.forEach { println(it) }
 
-    val box = Box(10, 10, 10, 1000)
+    val box = Box(10, 10, 10)
     box.height = 40
     println("Box: " + box.pack())
+
+    val teaBox = TeaBox(10)
+    println("TeaBox: \n" + teaBox.getTea())
 
 
 }
