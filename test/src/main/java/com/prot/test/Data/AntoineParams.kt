@@ -1,4 +1,4 @@
-package com.prot.test
+package com.prot.test.Data
 
 data class AntoineParams(
     val a: Double,
