@@ -62,6 +62,12 @@ fun main(): Unit = runBlocking {
     val teaBox = TeaBox(10)
     println("TeaBox: \n" + teaBox.getTea())
 
+    listOf("Yurii", "Anna", "Nelya")
+    val finder = Finder(listOf("Yurii", "Anna", "Nelya"))
+    finder.findItem("Yurii") {
+        println("Found $it")
+    }
+
 
 }
 
