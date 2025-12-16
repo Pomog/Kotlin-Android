@@ -68,6 +68,10 @@ fun main(): Unit = runBlocking {
         println("Found $it")
     }
 
+    finder.findItem("Cat", foundItem = { result ->
+        println("Found $result")
+    })
+
 
 }
 

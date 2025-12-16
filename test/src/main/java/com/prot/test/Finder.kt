@@ -1,13 +1,8 @@
 package com.prot.test
 
-class Finder(private val list: List<String>) {
-    fun findItem(elem: String, foundItem: (elem: String?) -> Unit) {
-        val item: List<String> = list.filter { it == elem }
-
-        if (item.isNotEmpty()) {
-            foundItem(item[0])
-        } else {
-            foundItem(null)
-        }
+class Finder<T>(private val list: List<T>) {
+    fun findItem(elem: T, foundItem: (elem: T?) -> Unit) {
+        val item = list.firstOrNull { it == elem }
+        foundItem(item)
     }
 }
