@@ -72,7 +72,24 @@ fun main(): Unit = runBlocking {
         println("Found $result")
     })
 
+    val input = Result.ERROR
+    getResult(input)
+}
 
+fun getResult(result: Result) {
+    return when (result) {
+        Result.SUCCESS -> {
+            println("Success")
+        }
+
+        Result.FAILURE -> {
+            println("Failure")
+        }
+
+        Result.ERROR -> {
+            println("Error")
+        }
+    }
 }
 
 suspend fun simpleGet() {
