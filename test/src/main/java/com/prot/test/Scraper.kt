@@ -1,8 +1,8 @@
 package com.prot.test
 
-import com.prot.test.Data.AntoineParams
-import com.prot.test.Data.Component
-import com.prot.test.Data.VaporLiquidResult
+import com.prot.test.data.AntoineParams
+import com.prot.test.data.Component
+import com.prot.test.data.VaporLiquidResult
 import java.net.HttpURLConnection
 import java.net.URI
 import kotlin.math.abs
