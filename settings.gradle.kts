@@ -23,3 +23,4 @@ rootProject.name = "MyTestApplication"
 include(":app")
 include(":test")
 include(":kotlin_test")
+include(":app:myapplication")
