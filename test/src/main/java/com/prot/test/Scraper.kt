@@ -124,18 +124,11 @@ class Scraper() {
         return 10.0.pow(log10P)
     }
 
-    fun chooseAntoineParams(pList: List<AntoineParams>, tk: Double): AntoineParams {
-        val chosen = pList
-            .filter { tk in it.tMinK..it.tMaxK }
-            .maxByOrNull { it.tMaxK - it.tMinK } ?: pList.first()
-        return chosen
-    }
-
     fun kIdeal(cas: String, tK: Double, pBar: Double): Double {
         val html = getPhaseChangeData(cas)
         val paramsList = parseAntoineAllSimple(html)
 
-        val params = chooseAntoineParams(paramsList, tK)
+        val params = SolventSwap.chooseAntoineParams(paramsList, tK)
 
         val pSat = pSatBar(tK, params)
 

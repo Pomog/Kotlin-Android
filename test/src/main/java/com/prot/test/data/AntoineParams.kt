@@ -5,5 +5,5 @@ data class AntoineParams(
     val b: Double,
     val c: Double,
     val tMinK: Double,
-    val tMaxK: Double
+    val tMaxK: Double,
 )
