@@ -1,8 +1,5 @@
 package com.prot.test
 
-import com.prot.test.data.AntoineParams
-import com.prot.test.data.Component
-import com.prot.test.data.VaporLiquidResult
 import java.net.HttpURLConnection
 import java.net.URI
 import kotlin.math.abs
@@ -128,11 +125,21 @@ class Scraper() {
         val html = getPhaseChangeData(cas)
         val paramsList = parseAntoineAllSimple(html)
 
-        val params = SolventSwap.chooseAntoineParams(paramsList, tK)
+        val params = chooseAntoineParams(paramsList, tK)
 
         val pSat = pSatBar(tK, params)
 
         return pSat / pBar
+    }
+
+    fun chooseAntoineParams(
+        pList: List<AntoineParams>,
+        tk: Double
+    ): AntoineParams {
+        val chosen = pList
+            .filter { tk in it.tMinK..it.tMaxK }
+            .maxByOrNull { it.tMaxK - it.tMinK } ?: pList.first()
+        return chosen
     }
 
 

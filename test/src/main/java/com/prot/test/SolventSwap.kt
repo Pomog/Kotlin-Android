@@ -1,8 +1,6 @@
 package com.prot.test
 
-import com.prot.test.data.AntoineParams
-import com.prot.test.data.BubblePointResult
-import com.prot.test.data.Component
+import kotlin.math.abs
 import kotlin.math.pow
 
 class SolventSwap {
@@ -20,6 +18,8 @@ class SolventSwap {
      *
      * f(T) = x1 * Psat1(T) + x2 * Psat2(T) - P
      */
+
+    val ITERATIONS = 80
 
     fun bubblePointIdealBinary(
         comp1: Component,
@@ -49,23 +49,61 @@ class SolventSwap {
             return x1 * p1 + x2 * p2 - pBar
         }
 
-        val fa = f(tLow)
-        val fb = f(tHigh)
+        var a = tLow
+        var b = tHigh
+        var fa = f(tLow)
+        var fb = f(tHigh)
 
         require(fa * fb <= 0.0) {
             "Bubble point not found in [$tLow, $tHigh] K: f(a)=$fa, f(b)=$fb"
         }
 
-        // TODO: Bisection
+        // Bisection
+        repeat(ITERATIONS) {
+            val c = 0.5 * (a + b)
+            val fc = f(c)
 
+            if (abs(fc) < 1e-9 || (b - a) < 1e-6) {
+                return buildBubbleResult(comp1, comp2, x1, x2, pBar, c)
+            }
+
+            if (fa * fc < 0.0) {
+                b = c; fb = fc
+            } else {
+                a = c; fa = fc
+            }
+        }
+
+        // return middle after all iterations
+        val tMid = 0.5 * (a + b)
+        return buildBubbleResult(comp1, comp2, x1, x2, pBar, tMid)
+    }
+
+    fun buildBubbleResult(
+        comp1: Component,
+        comp2: Component,
+        x1: Double,
+        x2: Double,
+        pBar: Double,
+        tK: Double
+    ): BubblePointResult {
+        val p1 = pSatBarWithComponent(tK, comp1)
+        val p2 = pSatBarWithComponent(tK, comp2)
+
+        val k1 = p1 / pBar
+        val k2 = p2 / pBar
+
+        val denom = k1 * x1 + k2 * x2
+        val y1 = k1 * x1 / denom
+        val y2 = k2 * x2 / denom
 
         return BubblePointResult(
-            tK = 0.0,
-            tC = 0.0,
-            y1 = 0.0,
-            y2 = 0.0,
-            k1 = 0.0,
-            k2 = 0.0,
+            tK = tK,
+            tC = tK - 273.1,
+            y1 = y1,
+            y2 = y2,
+            k1 = k1,
+            k2 = k2
         )
     }
 
