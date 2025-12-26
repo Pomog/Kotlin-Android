@@ -128,8 +128,7 @@ class SolventSwap {
      * @param component1 - starting solvent
      * @param component2 - target solvent
      * @param x1 - starting solvent mole fraction in the liquid (0..1)
-     * @param pBar - pressure in the apparat (bar)
-     * @param discretization - the discretization level - changed composition has no effect
+     * @param pBar - pressure in the apparatus (bar)
      * @param removalFraction - the molar fraction that evaporates
      * @param discretization - step size in terms of fraction of INITIAL liquid (0..1)
      *                         typically removalFraction / 100 for ~100 steps.
@@ -147,7 +146,7 @@ class SolventSwap {
         require(x1 > 0 && x1 < 1) {
             "x1 must be in (0,1)"
         }
-        require(removalFraction in 0.0..1.0) {
+        require(removalFraction > 0 && removalFraction < 1) {
             "removalFraction must be in [0,1]"
         }
         require(discretization > 0.0 && discretization <= 1.0) {
@@ -160,8 +159,6 @@ class SolventSwap {
 
         val totalToRemove = removalFraction * n0
         var removed = 0.0
-
-        removalFraction * n0
 
         while (removed < totalToRemove) {
             val nTot = n1 + n2
@@ -182,7 +179,7 @@ class SolventSwap {
 
             n1 -= removed1
             n2 -= removed2
-            removed += removed1 + removed2
+            removed += removedByStep
         }
 
         val nTotFinal = n1 + n2
