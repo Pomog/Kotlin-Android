@@ -129,7 +129,7 @@ class SolventSwap {
      * @param component2 - target solvent
      * @param x1 - starting solvent mole fraction in the liquid (0..1)
      * @param pBar - pressure in the apparatus (bar)
-     * @param removalFraction - the molar fraction that evaporates
+     * @param removalFraction - total fraction of INITIAL liquid *in moles* that evaporates (0..1)
      * @param discretization - step size in terms of fraction of INITIAL liquid (0..1)
      *                         typically removalFraction / 100 for ~100 steps.
      * @return - starting solvent mole fraction in the liquid AFTER evaporation

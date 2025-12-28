@@ -31,10 +31,22 @@ class Scraper() {
 
     fun getMaterialName(html: String): String {
         // <title>Methane</title>
-        val regex = Regex("""<title>(.+?)</title>""")
+        val regex = Regex("""<title>([^0-9]+?)</title>""")
         val match = regex.find(html)
 
         return match?.groupValues?.get(1) ?: "Name Not Found"
+    }
+
+    fun getMW(html: String): Double {
+        val mwRegex = Regex(
+            """Molecular\s+weight</a>:</strong>\s*([0-9]+(?:\.[0-9]+)?)"""
+        )
+
+        val match = mwRegex.find(html)
+            ?: error("Molecular weight not found in NIST HTML")
+
+        val mwStr = match.groupValues[1]
+        return mwStr.toDouble()
     }
 
     fun parseAntoineAllSimple(html: String): List<AntoineParams> {
@@ -72,10 +84,14 @@ class Scraper() {
         val html = getPhaseChangeData(cas)
         val allAntoine = parseAntoineAllSimple(html)
         val name = getMaterialName(html)
+        val mw = getMW(html)
+
 
         val component = Component(
             name = name,
             cas = cas,
+            mw = mw,
+            density = 0.0, // TODO: add density
             antoineRows = allAntoine
         )
         return component

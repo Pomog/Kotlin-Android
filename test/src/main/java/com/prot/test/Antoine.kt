@@ -23,8 +23,13 @@ fun main() {
     val massRatioInVaporY1 = bubble.y1 * acetoneMW / vapRelativeMass
     val massRatioInVaporY2 = bubble.y2 * methanolMW / vapRelativeMass
 
-
-
+    val liquidRelativeMolAfterConcentration = swap.batchSolventSwap(
+        acetone,
+        methanol,
+        x1,
+        pBar,
+        removalFraction = 0.5
+    )
 
     println(
         "Solvent Mixture, mass Ratio: Acetone %.2f, Methanol %.2f"
@@ -42,5 +47,11 @@ fun main() {
     println(
         "Vapor phase  (mass fractions):  Acetone w1 = %.2f, Methanol w2 = %.2f"
             .format(massRatioInVaporY1, massRatioInVaporY2)
+    )
+
+    println(
+        "After concentration, solvent 1 content in the residual liquid: X1(mol%%) = %.2f ".format(
+            liquidRelativeMolAfterConcentration
+        )
     )
 }
