@@ -31,3 +31,18 @@ data class AntoineParams(
     val tMinK: Double,
     val tMaxK: Double,
 )
+
+data class HttpTimeouts(
+    val connectMs: Int = 7000,
+    val readMs: Int = 7000
+)
+
+data class HttpGetRequest(
+    val baseUrl: String,
+    val path: String,
+    val query: Map<String, String> = emptyMap(),
+    val headers: Map<String, String> = mapOf(
+        "User-Agent" to "Mozilla/5.0"
+    ),
+    val timeouts: HttpTimeouts = HttpTimeouts()
+)

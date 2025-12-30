@@ -2,32 +2,74 @@ package com.prot.test
 
 import java.net.HttpURLConnection
 import java.net.URI
+import java.net.URL
+import java.net.URLEncoder
 import kotlin.math.abs
 import kotlin.math.pow
 
 class Scraper() {
-    fun getPhaseChangeData(cas: String): String {
-        val casTrim = cas.trim()
-        val url = URI(
-            "https://webbook.nist.gov/cgi/cbook.cgi?ID=${casTrim}&Units=SI&Mask=4&Type=ANTOINE"
-        ).toURL()
 
-        val content: String
+    private val NIST_BASE = "https://webbook.nist.gov"
+    private val NIST_CBOOK_PATH = "/cgi/cbook.cgi"
 
+    private fun encode(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-        val conn: HttpURLConnection = url.openConnection() as HttpURLConnection
+    private fun buildUrl(req: HttpGetRequest): URL {
+        val base = req.baseUrl.trimEnd('/')
+        val path = req.path.trimStart('/')
+
+        val queryStr = if (req.query.isEmpty()) {
+            ""
+        } else {
+            req.query.entries.joinToString("&", prefix = "?") { (k, v) ->
+                "${encode(k)}=${encode(v)}"
+            }
+        }
+
+        val full = "$base/$path$queryStr"
+        return URI(full).toURL()
+    }
+
+    private fun getConnection(url: URL, req: HttpGetRequest): HttpURLConnection {
+        val conn = url.openConnection() as HttpURLConnection
         conn.requestMethod = "GET"
-        conn.connectTimeout = 5000
+        conn.connectTimeout = req.timeouts.connectMs
+        conn.readTimeout = req.timeouts.readMs
 
-        try {
-            content = conn.getInputStream().use { it.reader().readText() }
+        req.headers.forEach { (k, v) -> conn.setRequestProperty(k, v) }
+
+        return conn
+    }
+
+    private fun httpGet(req: HttpGetRequest): String {
+        val url = buildUrl(req)
+        val conn = getConnection(url, req)
+
+        return try {
+            conn.inputStream.use { it.reader().readText() }
         } finally {
             conn.disconnect()
         }
-        println(content)
-
-        return content
     }
+
+
+    fun getPhaseChangeData(cas: String): String {
+        val casTrim = cas.trim()
+
+        val req = HttpGetRequest(
+            baseUrl = NIST_BASE,
+            path = NIST_CBOOK_PATH,
+            query = mapOf(
+                "ID" to casTrim,
+                "Units" to "SI",
+                "Mask" to "4",
+                "Type" to "ANTOINE"
+            )
+        )
+
+        return httpGet(req)
+    }
+
 
     fun getMaterialName(html: String): String {
         // <title>Methane</title>
@@ -160,3 +202,5 @@ class Scraper() {
 
 
 }
+
+
