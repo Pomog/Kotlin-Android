@@ -7,13 +7,15 @@ Android Jetpack Compose is a way of building modern android apps in android app 
 ## ADB
 
 ```Powershall
- $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
- $adb kill-server
- $adb start-server
- $adb pair 192.168.1.138:3663
+Get-ChildItem env:
+Get-ChildItem "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
+& $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
+& $adb kill-server
+& $adb start-server
+& $adb pair 192.168.1.138:3663
  
- Enter pairing code: 674903
+  Enter pairing code: 674903
  
 Test-NetConnection 192.168.1.138 -Port 36639
-$adb devices -l
+& $adb devices -l
 ```
