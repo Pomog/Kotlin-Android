@@ -1,7 +1,6 @@
 package com.prot.myapplication
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -51,6 +50,8 @@ class IntroActivity : ComponentActivity() {
 
 @Composable
 fun MyApp() {
+    var counter by remember { mutableStateOf(0) }
+
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -63,28 +64,28 @@ fun MyApp() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "1", style = TextStyle(
+                text = "$counter", style = TextStyle(
                     color = Color.Red,
                     fontSize = 48.sp,
                     fontWeight = FontWeight.Bold
                 )
             )
             Spacer(modifier = Modifier.height(30.dp))
-            CreateCircle()
+            CreateCircle(counter = counter) {
+                counter = it + 1
+            }
         }
     }
 }
 
 @Composable
-fun CreateCircle() {
-    var counter by remember { mutableStateOf(0) }
+fun CreateCircle(counter: Int = 0, updateCounter: (Int) -> Unit) {
     Card(
         modifier = Modifier
             .padding(3.dp)
             .size(50.dp)
             .clickable {
-                counter++
-                Log.d("Tap", "Circle: Tap and $counter")
+                updateCounter(counter)
             },
         shape = CircleShape, elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
