@@ -19,3 +19,14 @@ Get-ChildItem "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 Test-NetConnection 192.168.1.138 -Port 36639
 & $adb devices -l
 ```
+
+```java
+    public static List<Integer> subarraySum(int[] nums, int target) {
+        List<Integer> result = new ArrayList<>();
+        int runningTotal;
+        Map<Integer, Integer> indices = new HashMap<>();
+        
+        // runningTotal - index
+        indices.put(0, -1);
+    }
+```
