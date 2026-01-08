@@ -1,6 +1,7 @@
 package com.prot.tipappdemo
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,7 +30,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.prot.tipappdemo.components.InputFiled
 import com.prot.tipappdemo.ui.theme.MyTestApplicationTheme
@@ -93,12 +93,31 @@ fun TopHeader(totalPerPerson: Double = 0.0) {
 
 @Composable
 fun MainContent() {
+    BillForm { bill ->
+        Log.d("TAG", "MainContent: $bill")
+    }
+}
+
+@Composable
+fun GreetingPreview() {
+    MyTestApplicationTheme {
+        MyApp {
+            TopHeader()
+            MainContent()
+        }
+    }
+}
+
+@Composable
+fun BillForm(
+    modifier: Modifier = Modifier,
+    onValChange: (String) -> Unit = {}
+) {
     val totalBillState = remember { mutableStateOf("0") }
     val validState = remember(totalBillState.value) {
         totalBillState.value.trim().isNotEmpty()
     }
     val keyboardController = LocalSoftwareKeyboardController.current
-
 
     Surface(
         modifier = Modifier
@@ -115,26 +134,11 @@ fun MainContent() {
                 isSingleLine = true,
                 onAction = KeyboardActions {
                     if (!validState) return@KeyboardActions
-                    // TODO: onValueChange
+                    onValChange(totalBillState.value.trim())
                     keyboardController?.hide()
                 }
             )
-
-
-        }
-    }
-
-
-}
-
-
-@Preview
-@Composable
-fun GreetingPreview() {
-    MyTestApplicationTheme {
-        MyApp {
-            TopHeader()
-            MainContent()
         }
     }
 }
+
