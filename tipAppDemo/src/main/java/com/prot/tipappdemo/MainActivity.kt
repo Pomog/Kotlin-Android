@@ -30,6 +30,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -51,7 +52,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApp {
-                TopHeader()
                 MainContent()
             }
 
@@ -69,9 +69,7 @@ fun MyApp(content: @Composable () -> Unit) {
                     .padding(innerPadding)
             ) {
                 content()
-
             }
-
         }
     }
 }
@@ -80,6 +78,7 @@ fun MyApp(content: @Composable () -> Unit) {
 fun TopHeader(totalPerPerson: Double = 0.0) {
     Surface( // TODO: change color
         modifier = Modifier
+            .padding(15.dp)
             .fillMaxWidth()
             .height(150.dp)
             .clip(shape = CircleShape.copy(all = CornerSize(12.dp))), color = Color(0xFF95C5FC)
@@ -112,7 +111,6 @@ fun MainContent() {
 fun GreetingPreview() {
     MyTestApplicationTheme {
         MyApp {
-            TopHeader()
             MainContent()
         }
     }
@@ -128,6 +126,11 @@ fun BillForm(
         totalBillState.value.trim().isNotEmpty()
     }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val sliderPositionState = remember {
+        mutableFloatStateOf(0f)
+    }
+
+    TopHeader()
 
     Surface(
         modifier = Modifier
@@ -205,18 +208,11 @@ fun BillForm(
                     Text(text = "25%")
                     Spacer(modifier = Modifier.height(14.dp))
                     Slider(
-                        value = sliderPositionState,
-                        onValueChange = { sliderPositionState = it },
-                        state = TODO(),
-                        modifier = TODO(),
-                        enabled = TODO(),
-                        colors = TODO(),
-                        interactionSource = TODO(),
-                        thumb = TODO(),
-                        track = TODO()
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                        value = sliderPositionState.floatValue,
+                        onValueChange = { sliderPositionState.floatValue = it },
+                        steps = 5,
                     )
-
-
                 }
             } else {
                 Box {
