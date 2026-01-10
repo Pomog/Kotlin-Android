@@ -39,7 +39,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.prot.tipappdemo.components.InputFiled
 import com.prot.tipappdemo.ui.theme.MyTestApplicationTheme
@@ -63,7 +62,7 @@ class MainActivity : ComponentActivity() {
 fun MyApp(content: @Composable () -> Unit) {
     MyTestApplicationTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
@@ -103,16 +102,6 @@ fun TopHeader(totalPerPerson: Double = 0.0) {
 fun MainContent() {
     BillForm { bill ->
         Log.d("TAG", "MainContent: $bill")
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MyTestApplicationTheme {
-        MyApp {
-            MainContent()
-        }
     }
 }
 
