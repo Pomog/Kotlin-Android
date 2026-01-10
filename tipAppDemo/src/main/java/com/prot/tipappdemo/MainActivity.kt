@@ -23,8 +23,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.prot.tipappdemo.components.InputFiled
 import com.prot.tipappdemo.ui.theme.MyTestApplicationTheme
@@ -79,8 +82,7 @@ fun TopHeader(totalPerPerson: Double = 0.0) {
         modifier = Modifier
             .fillMaxWidth()
             .height(150.dp)
-            .clip(shape = CircleShape.copy(all = CornerSize(12.dp))),
-        color = Color(0xFF95C5FC)
+            .clip(shape = CircleShape.copy(all = CornerSize(12.dp))), color = Color(0xFF95C5FC)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -105,6 +107,7 @@ fun MainContent() {
     }
 }
 
+@Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     MyTestApplicationTheme {
@@ -115,10 +118,10 @@ fun GreetingPreview() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BillForm(
-    modifier: Modifier = Modifier,
-    onValChange: (String) -> Unit = {}
+    modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}
 ) {
     val totalBillState = remember { mutableStateOf("0") }
     val validState = remember(totalBillState.value) {
@@ -134,8 +137,7 @@ fun BillForm(
         border = BorderStroke(width = 1.dp, color = Color.LightGray)
     ) {
         Column(
-            modifier =
-                Modifier.padding(6.dp),
+            modifier = Modifier.padding(6.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start,
         ) {
@@ -148,12 +150,10 @@ fun BillForm(
                     if (!validState) return@KeyboardActions
                     onValChange(totalBillState.value.trim())
                     keyboardController?.hide()
-                }
-            )
+                })
             if (validState) {
                 Row(
-                    modifier = Modifier.padding(3.dp),
-                    horizontalArrangement = Arrangement.Start
+                    modifier = Modifier.padding(3.dp), horizontalArrangement = Arrangement.Start
                 ) {
                     Text(
                         text = "Split",
@@ -162,20 +162,61 @@ fun BillForm(
                     Spacer(modifier = Modifier.width(120.dp))
 
                     Row(
-                        modifier =
-                            Modifier.padding(horizontal = 3.dp),
+                        modifier = Modifier.padding(horizontal = 3.dp),
                         horizontalArrangement = Arrangement.End,
                     ) {
                         RoundIconButton(
-                            imageVector = Icons.Default.Remove,
-                            onClick = { /*TODO*/ }
+                            imageVector = Icons.Default.Remove, onClick = { /*TODO*/ })
+                        Text(
+                            text = "2",
+                            modifier = Modifier
+                                .align(alignment = Alignment.CenterVertically)
+                                .padding(start = 9.dp, end = 9.dp),
                         )
                         RoundIconButton(
-                            imageVector = Icons.Default.Add,
-                            onClick = { /*TODO*/ }
-                        )
-
+                            imageVector = Icons.Default.Add, onClick = { /*TODO*/ })
                     }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 3.dp,
+                            vertical = 12.dp
+                        )
+                ) {
+                    Text(
+                        text = "Tip",
+                        modifier = Modifier
+                            .align(alignment = Alignment.CenterVertically)
+                    )
+                    Spacer(modifier = Modifier.width(200.dp))
+                    Text(
+                        text = "$326.14",
+                        modifier = Modifier
+                            .align(alignment = Alignment.CenterVertically)
+                    )
+                }
+
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "25%")
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Slider(
+                        value = sliderPositionState,
+                        onValueChange = { sliderPositionState = it },
+                        state = TODO(),
+                        modifier = TODO(),
+                        enabled = TODO(),
+                        colors = TODO(),
+                        interactionSource = TODO(),
+                        thumb = TODO(),
+                        track = TODO()
+                    )
+
+
                 }
             } else {
                 Box {
