@@ -31,6 +31,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -118,6 +119,13 @@ fun BillForm(
     val sliderPositionState = remember {
         mutableFloatStateOf(0f)
     }
+    val splitByState = remember {
+        mutableIntStateOf(1)
+    }
+    val maxSquadNumber = 5
+    val tipPercentage = (sliderPositionState.floatValue * 100).toInt()
+
+
 
     TopHeader()
 
@@ -158,15 +166,27 @@ fun BillForm(
                         horizontalArrangement = Arrangement.End,
                     ) {
                         RoundIconButton(
-                            imageVector = Icons.Default.Remove, onClick = { /*TODO*/ })
+                            imageVector = Icons.Default.Remove,
+                            onClick = {
+                                splitByState.intValue =
+                                    if (splitByState.intValue > 1) {
+                                        splitByState.intValue - 1
+                                    } else 1
+
+                            })
                         Text(
-                            text = "2",
+                            text = splitByState.intValue.toString(),
                             modifier = Modifier
                                 .align(alignment = Alignment.CenterVertically)
                                 .padding(start = 9.dp, end = 9.dp),
                         )
                         RoundIconButton(
-                            imageVector = Icons.Default.Add, onClick = { /*TODO*/ })
+                            imageVector = Icons.Default.Add,
+                            onClick = {
+                                if (splitByState.intValue < maxSquadNumber) {
+                                    splitByState.intValue += 1
+                                }
+                            })
                     }
                 }
 
@@ -194,13 +214,13 @@ fun BillForm(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "25%")
+                    Text(text = "$tipPercentage %")
                     Spacer(modifier = Modifier.height(14.dp))
                     Slider(
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                         value = sliderPositionState.floatValue,
                         onValueChange = { sliderPositionState.floatValue = it },
-                        steps = 5,
+                        steps = maxSquadNumber,
                     )
                 }
             } else {
