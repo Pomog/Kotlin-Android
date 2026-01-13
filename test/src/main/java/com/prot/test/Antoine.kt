@@ -2,10 +2,34 @@ package com.prot.test
 
 fun main() {
     val scraper = Scraper()
+    val repo = FakeComponentRepository()
+    val manualInput = FakeManualComponentInput()
     val swap = SolventSwap()
 
-    val x1 = 0.5
+    val x1 = 0.0
     val pBar = 0.266
+
+    val service: ComponentService = ComponentServiceImpl(repo, scraper, manualInput)
+
+    val acetone: Component = service.getComponent("67-64-1")
+    val methanol: Component = service.getComponent("67-56-1")
+
+    println(acetone)
+    println(methanol)
+
+    swap.solventSwapCycles(
+        acetone,
+        methanol,
+        pBar,
+        removalMassFraction = 0.8
+    )
+
+
+    /*
+
+
+
+
 
     val acetone = scraper.getComponent("67-64-1") // MW = 58 g/mol
     val acetoneMW = 58
@@ -54,4 +78,8 @@ fun main() {
             liquidRelativeMolAfterConcentration
         )
     )
+
+ */
+
+
 }

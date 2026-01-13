@@ -1,12 +1,32 @@
 package com.prot.test
 
+// DTO
 data class Component(
     val name: String,
     val cas: String,
     val mw: Double,
-    val density: Double,
+    val density: Double, //  relative density water=1
     val antoineRows: List<AntoineParams>,
 )
+
+interface ComponentRepository {
+    fun findByCas(cas: String): Component?
+    fun saveComponent(component: Component) // upsert
+}
+
+// Service: entry point.
+interface ComponentService {
+    fun getComponent(cas: String): Component
+}
+
+interface ComponentScraper {
+    fun fetchComponent(cas: String): Component?
+}
+
+// Manual input: UI/CLI layer will implement this.
+interface ManualComponentInput {
+    fun requestComponent(cas: String, seed: Component? = null): Component?
+}
 
 data class VaporLiquidResult(
     val y1: Double,

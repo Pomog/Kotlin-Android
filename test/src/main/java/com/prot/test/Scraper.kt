@@ -7,21 +7,44 @@ import java.net.URLEncoder
 import kotlin.math.abs
 import kotlin.math.pow
 
-class Scraper() {
+class Scraper() : ComponentScraper {
 
-    private val NIST_BASE = "https://webbook.nist.gov"
-    private val NIST_CBOOK_PATH = "/cgi/cbook.cgi"
+    private val nistChemistryWebBookBaseUrl = "https://webbook.nist.gov"
+    private val nistChemistryWebBookPath = "/cgi/cbook.cgi"
 
-    private val PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov"
+    private val pubChemBaseUrl = "https://pubchem.ncbi.nlm.nih.gov"
 
-    private val PUBCHEM_PUGVIEW_PATH = "/rest/pug_view/data/compound"
+    private val pubChemPugViewPath = "/rest/pug_view/data/compound"
 
-    private val PUBCHEM_PUGREST_COMPOUND_PATH = "/rest/pug/compound"
+    private val pubChemCompoundApiPath = "/rest/pug/compound"
 
     private fun encodePathSegment(s: String): String =
         URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 
     private fun encode(s: String): String = URLEncoder.encode(s, "UTF-8")
+
+    override fun fetchComponent(cas: String): Component? = runCatching {
+        val key = cas.trim()
+
+        val html = getPhaseChangeData(key)
+        val allAntoine = parseAntoineAllSimple(html)
+        val name = getMaterialName(html).trim()
+        val mw = getMW(html)
+
+        val relDensity = runCatching {
+            getRelativeDensityWater1ByName(name, mw)
+        }.getOrElse {
+            Double.NaN
+        }
+
+        Component(
+            name = name,
+            cas = key,
+            mw = mw,
+            density = relDensity,
+            antoineRows = allAntoine
+        )
+    }.getOrNull()
 
     /**
      * PUG-REST: CID list -> MW values (to disambiguate)
@@ -31,8 +54,8 @@ class Scraper() {
         val cidList = cids.joinToString(",")
 
         val req = HttpGetRequest(
-            baseUrl = PUBCHEM_BASE,
-            path = "$PUBCHEM_PUGREST_COMPOUND_PATH/cid/$cidList/property/MolecularWeight/JSON"
+            baseUrl = pubChemBaseUrl,
+            path = "$pubChemCompoundApiPath/cid/$cidList/property/MolecularWeight/JSON"
         )
 
         val body = httpGet(req)
@@ -57,7 +80,7 @@ class Scraper() {
     /**
      * Choose best CID using expected MW (from NIST).
      */
-    fun nameToBestCidByMw(name: String, expectedMw: Double): Long {
+    private fun nameToBestCidByMw(name: String, expectedMw: Double): Long {
         val cids = nameToCids(name)
         if (cids.size == 1) return cids.first()
 
@@ -73,10 +96,10 @@ class Scraper() {
      * PUG-View: CID -> Density section strings -> extract "Relative density (water = 1): X"
      * GET /rest/pug_view/data/compound/{cid}/JSON?heading=Density
      */
-    fun getRelativeDensityWater1FromCid(cid: Long): Double {
+    private fun getRelativeDensityWater1FromCid(cid: Long): Double {
         val req = HttpGetRequest(
-            baseUrl = PUBCHEM_BASE,
-            path = "$PUBCHEM_PUGVIEW_PATH/$cid/JSON",
+            baseUrl = pubChemBaseUrl,
+            path = "$pubChemPugViewPath/$cid/JSON",
             query = mapOf("heading" to "Density")
         )
 
@@ -92,10 +115,12 @@ class Scraper() {
                     it.contains("water", ignoreCase = true)
         } ?: error("Relative density (water=1) not found for CID=$cid")
 
-        val num = Regex("""-?\d+(?:\.\d+)?""").find(line)?.value
-            ?: error("No numeric value found in: '$line'")
+        val m = Regex(
+            """Relative\s+density\s*\(water\s*=\s*1\)\s*:\s*([0-9]+(?:\.[0-9]+)?)""",
+            setOf(RegexOption.IGNORE_CASE)
+        ).find(line) ?: error("Could not parse relative density from: '$line'")
 
-        return num.toDouble()
+        return m.groupValues[1].toDouble()
     }
 
     /**
@@ -115,12 +140,12 @@ class Scraper() {
      * PUG-REST: name -> list of CIDs
      * GET /rest/pug/compound/name/{name}/cids/JSON
      */
-    fun nameToCids(name: String): List<Long> {
+    private fun nameToCids(name: String): List<Long> {
         val nm = encodePathSegment(name.trim())
 
         val req = HttpGetRequest(
-            baseUrl = PUBCHEM_BASE,
-            path = "$PUBCHEM_PUGREST_COMPOUND_PATH/name/$nm/cids/JSON"
+            baseUrl = pubChemBaseUrl,
+            path = "$pubChemCompoundApiPath/name/$nm/cids/JSON"
         )
 
         val body = httpGet(req)
@@ -180,12 +205,12 @@ class Scraper() {
     }
 
 
-    fun getPhaseChangeData(cas: String): String {
+    private fun getPhaseChangeData(cas: String): String {
         val casTrim = cas.trim()
 
         val req = HttpGetRequest(
-            baseUrl = NIST_BASE,
-            path = NIST_CBOOK_PATH,
+            baseUrl = nistChemistryWebBookBaseUrl,
+            path = nistChemistryWebBookPath,
             query = mapOf(
                 "ID" to casTrim,
                 "Units" to "SI",
@@ -198,7 +223,7 @@ class Scraper() {
     }
 
 
-    fun getMaterialName(html: String): String {
+    private fun getMaterialName(html: String): String {
         // <title>Methane</title>
         val regex = Regex("""<title>([^0-9]+?)</title>""")
         val match = regex.find(html)
@@ -219,7 +244,7 @@ class Scraper() {
         return mwStr.toDouble()
     }
 
-    fun parseAntoineAllSimple(html: String): List<AntoineParams> {
+    private fun parseAntoineAllSimple(html: String): List<AntoineParams> {
         //    <tr class="exp"> ... </tr>
         val rowRegex = Regex(
             """<tr class="exp">(.+?)</tr>""", setOf(RegexOption.DOT_MATCHES_ALL)
@@ -253,38 +278,15 @@ class Scraper() {
     /**
      * Convenience: name -> best CID (by MW) -> relative density (water=1)
      */
-    fun getRelativeDensityWater1ByName(name: String, expectedMw: Double): Double {
+    private fun getRelativeDensityWater1ByName(name: String, expectedMw: Double): Double {
         val cid = nameToBestCidByMw(name, expectedMw)
         return getRelativeDensityWater1FromCid(cid)
-    }
-
-    fun getComponent(cas: String): Component {
-        val html = getPhaseChangeData(cas)
-        val allAntoine = parseAntoineAllSimple(html)
-        val name = getMaterialName(html)
-        val mw = getMW(html)
-
-        val relDensity = runCatching {
-            getRelativeDensityWater1ByName(name, mw)
-        }.getOrElse {
-            Double.NaN
-        }
-
-
-        val component = Component(
-            name = name,
-            cas = cas,
-            mw = mw,
-            density = relDensity,
-            antoineRows = allAntoine
-        )
-        return component
     }
 
     /**
      * K=x/y at γ=1 K=Psat(T)/P
      */
-    fun kIdeal(component: Component, tK: Double, pBar: Double): Double {
+    private fun kIdeal(component: Component, tK: Double, pBar: Double): Double {
         val params = chooseAntoineParams(component.antoineRows, tK)
         val pSatBar = pSatBar(tK, params)
         return pSatBar / pBar
@@ -295,7 +297,7 @@ class Scraper() {
      * Input: T (K), P (bar), x1, x2.
      * Output: vapor composition (y1,y2) and K-values.
      */
-    fun vaporCompositionIdeal(
+    private fun vaporCompositionIdeal(
         comp1: Component,
         comp2: Component,
         tK: Double,
@@ -316,12 +318,12 @@ class Scraper() {
     }
 
 
-    fun pSatBar(tk: Double, p: AntoineParams): Double {
+    private fun pSatBar(tk: Double, p: AntoineParams): Double {
         val log10P = p.a - p.b / (tk + p.c)
         return 10.0.pow(log10P)
     }
 
-    fun kIdeal(cas: String, tK: Double, pBar: Double): Double {
+    private fun kIdeal(cas: String, tK: Double, pBar: Double): Double {
         val html = getPhaseChangeData(cas)
         val paramsList = parseAntoineAllSimple(html)
 
@@ -332,7 +334,7 @@ class Scraper() {
         return pSat / pBar
     }
 
-    fun chooseAntoineParams(
+    private fun chooseAntoineParams(
         pList: List<AntoineParams>,
         tk: Double
     ): AntoineParams {
@@ -341,8 +343,6 @@ class Scraper() {
             .maxByOrNull { it.tMaxK - it.tMinK } ?: pList.first()
         return chosen
     }
-
-
 }
 
 
