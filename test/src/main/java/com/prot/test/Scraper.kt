@@ -12,7 +12,130 @@ class Scraper() {
     private val NIST_BASE = "https://webbook.nist.gov"
     private val NIST_CBOOK_PATH = "/cgi/cbook.cgi"
 
+    private val PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov"
+
+    private val PUBCHEM_PUGVIEW_PATH = "/rest/pug_view/data/compound"
+
+    private val PUBCHEM_PUGREST_COMPOUND_PATH = "/rest/pug/compound"
+
+    private fun encodePathSegment(s: String): String =
+        URLEncoder.encode(s, "UTF-8").replace("+", "%20")
+
     private fun encode(s: String): String = URLEncoder.encode(s, "UTF-8")
+
+    /**
+     * PUG-REST: CID list -> MW values (to disambiguate)
+     * GET /rest/pug/compound/cid/{cid1,cid2,...}/property/MolecularWeight/JSON
+     */
+    private fun fetchMwForCids(cids: List<Long>): Map<Long, Double> {
+        val cidList = cids.joinToString(",")
+
+        val req = HttpGetRequest(
+            baseUrl = PUBCHEM_BASE,
+            path = "$PUBCHEM_PUGREST_COMPOUND_PATH/cid/$cidList/property/MolecularWeight/JSON"
+        )
+
+        val body = httpGet(req)
+
+        // {"CID":180,"MolecularWeight":58.08,...}
+        val rx = Regex(
+            """\{[^{}]*"CID"\s*:\s*(\d+)[^{}]*"MolecularWeight"\s*:\s*([0-9]+(?:\.[0-9]+)?)""",
+            setOf(RegexOption.DOT_MATCHES_ALL)
+        )
+
+        val map = mutableMapOf<Long, Double>()
+        for (m in rx.findAll(body)) {
+            val cid = m.groupValues[1].toLong()
+            val mw = m.groupValues[2].toDouble()
+            map[cid] = mw
+        }
+
+        if (map.isEmpty()) error("Could not parse MW table. Response: $body")
+        return map
+    }
+
+    /**
+     * Choose best CID using expected MW (from NIST).
+     */
+    fun nameToBestCidByMw(name: String, expectedMw: Double): Long {
+        val cids = nameToCids(name)
+        if (cids.size == 1) return cids.first()
+
+        val mwMap = fetchMwForCids(cids)
+
+        return mwMap.entries
+            .minByOrNull { (_, mw) -> abs(mw - expectedMw) / expectedMw }
+            ?.key
+            ?: cids.first()
+    }
+
+    /**
+     * PUG-View: CID -> Density section strings -> extract "Relative density (water = 1): X"
+     * GET /rest/pug_view/data/compound/{cid}/JSON?heading=Density
+     */
+    fun getRelativeDensityWater1FromCid(cid: Long): Double {
+        val req = HttpGetRequest(
+            baseUrl = PUBCHEM_BASE,
+            path = "$PUBCHEM_PUGVIEW_PATH/$cid/JSON",
+            query = mapOf("heading" to "Density")
+        )
+
+        val body = httpGet(req)
+
+        val strings = Regex(
+            """"String"\s*:\s*"((?:\\.|[^"\\])*)"""",
+            setOf(RegexOption.DOT_MATCHES_ALL)
+        ).findAll(body).map { unescapeJsonString(it.groupValues[1]) }.toList()
+
+        val line = strings.firstOrNull {
+            it.contains("Relative density", ignoreCase = true) &&
+                    it.contains("water", ignoreCase = true)
+        } ?: error("Relative density (water=1) not found for CID=$cid")
+
+        val num = Regex("""-?\d+(?:\.\d+)?""").find(line)?.value
+            ?: error("No numeric value found in: '$line'")
+
+        return num.toDouble()
+    }
+
+    /**
+     * Minimal JSON string unescape for values coming from "String": "..."
+     */
+    private fun unescapeJsonString(s: String): String {
+
+        return s.replace("""\n""", "\n")
+            .replace("""\t""", "\t")
+            .replace("""\"""", "\"")
+            .replace("""\\//""", "//")
+            .replace("""\\\\""", "\\")
+    }
+
+
+    /**
+     * PUG-REST: name -> list of CIDs
+     * GET /rest/pug/compound/name/{name}/cids/JSON
+     */
+    fun nameToCids(name: String): List<Long> {
+        val nm = encodePathSegment(name.trim())
+
+        val req = HttpGetRequest(
+            baseUrl = PUBCHEM_BASE,
+            path = "$PUBCHEM_PUGREST_COMPOUND_PATH/name/$nm/cids/JSON"
+        )
+
+        val body = httpGet(req)
+
+        // {"IdentifierList":{"CID":[180,86235482]}}
+        val listBlock = Regex(
+            """"CID"\s*:\s*\[(.*?)]""",
+            setOf(RegexOption.DOT_MATCHES_ALL)
+        ).find(body)?.groupValues?.get(1)
+            ?: error("CID list not found for name='$name'. Response: $body")
+
+        val cids = Regex("""\d+""").findAll(listBlock).map { it.value.toLong() }.toList()
+        if (cids.isEmpty()) error("No CIDs parsed for name='$name'. Response: $body")
+        return cids
+    }
 
     private fun buildUrl(req: HttpGetRequest): URL {
         val base = req.baseUrl.trimEnd('/')
@@ -46,7 +169,11 @@ class Scraper() {
         val conn = getConnection(url, req)
 
         return try {
-            conn.inputStream.use { it.reader().readText() }
+            val code = conn.responseCode
+            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+            val body = stream?.use { it.reader().readText() } ?: ""
+            if (code !in 200..299) error("HTTP $code for $url\n$body")
+            body
         } finally {
             conn.disconnect()
         }
@@ -76,7 +203,8 @@ class Scraper() {
         val regex = Regex("""<title>([^0-9]+?)</title>""")
         val match = regex.find(html)
 
-        return match?.groupValues?.get(1) ?: "Name Not Found"
+        val raw = match?.groupValues?.get(1)?.trim() ?: "Name Not Found"
+        return raw.replace(Regex("""\s*-\s*NIST.*$"""), "").trim()
     }
 
     fun getMW(html: String): Double {
@@ -122,18 +250,32 @@ class Scraper() {
         }.toList()
     }
 
+    /**
+     * Convenience: name -> best CID (by MW) -> relative density (water=1)
+     */
+    fun getRelativeDensityWater1ByName(name: String, expectedMw: Double): Double {
+        val cid = nameToBestCidByMw(name, expectedMw)
+        return getRelativeDensityWater1FromCid(cid)
+    }
+
     fun getComponent(cas: String): Component {
         val html = getPhaseChangeData(cas)
         val allAntoine = parseAntoineAllSimple(html)
         val name = getMaterialName(html)
         val mw = getMW(html)
 
+        val relDensity = runCatching {
+            getRelativeDensityWater1ByName(name, mw)
+        }.getOrElse {
+            Double.NaN
+        }
+
 
         val component = Component(
             name = name,
             cas = cas,
             mw = mw,
-            density = 0.0, // TODO: add density
+            density = relDensity,
             antoineRows = allAntoine
         )
         return component
