@@ -147,7 +147,7 @@ fun BillForm(
     val sliderPositionState = remember {
         mutableFloatStateOf(0f)
     }
-    val tipPercentage = (sliderPositionState.floatValue * 100).toInt()
+    val tipPercentage = (sliderPositionState.floatValue).toInt()
 
     TopHeader(
         totalPerPerson = totalPerPersonState.value
@@ -255,19 +255,24 @@ fun BillForm(
                         value = sliderPositionState.floatValue,
                         onValueChange = { newValue ->
                             sliderPositionState.floatValue = newValue
+
+                            val bill = totalBillState.value.toDoubleOrNull() ?: 0.0
+                            val percent = newValue.toInt()
+
                             tipAmountState.value = calculateTotalTip(
-                                totalBill = totalBillState.value.toDouble(),
-                                tipPercentage = tipPercentage
+                                totalBill = bill,
+                                tipPercentage = percent
                             )
                             totalPerPersonState.value = calculateTotalPerPerson(
-                                totalBill = totalBillState.value.toDouble(),
+                                totalBill = bill,
                                 splitBy = splitByState.value,
-                                tipPercentage = tipPercentage
+                                tipPercentage = percent
                             )
                             Log.d("TAG", "BillForm: ${tipAmountState.value}")
 
                         },
-                        steps = maxSquadNumber,
+                        valueRange = 0f..100f,
+                        steps = 99
                     )
                 }
             } else {
