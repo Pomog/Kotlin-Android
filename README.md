@@ -34,3 +34,15 @@ Test-NetConnection 192.168.1.138 -Port 36639
     indices.put(0, -1);
 }
 ```
+```bash
+sudo apt update
+sudo apt install lm-sensors
+sudo sensors-detect
+
+while true; do
+    date >> ~/Desktop/sensors.log
+    sensors >> ~/Desktop/sensors.log
+    echo "----------------" >> ~/Desktop/sensors.log
+    sleep 5
+done
+```
